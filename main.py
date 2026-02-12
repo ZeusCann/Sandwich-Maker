@@ -60,6 +60,7 @@ class SandwichMachine:
     def process_coins(self):
         """Returns the total calculated from coins inserted.
            Hint: include input() function here, e.g. input("how many quarters?: ")"""
+        print("Please insert coins.")
         dollars = float(input("How many dollars?: "))
         half_dollars = float(input("How many half dollars?: ")) * 0.5
         quarters = float(input("How many quarters?: ")) * 0.25
@@ -72,34 +73,50 @@ class SandwichMachine:
            Hint: use the output of process_coins() function for cost input"""
         if coins < cost:
             print("Sorry, there is not enough money..")
-        else:
-            change = coins - cost
-            print(f"Here is your change: ${change:.2f}")
+            return False
+
+        change = coins - cost
+        print(f"Here's your change: ${change:.2f}")
+        return True
 
     def make_sandwich(self, sandwich_size, order_ingredients):
         """Deduct the required ingredients from the resources.
            Hint: no output"""
-        print("Making Sandwich...")
+        for item, amount in order_ingredients.items():
+            self.machine_resources[item] -= amount
+        print(f"{sandwich_size} sandwich is ready. Bon Appetit!")
+
+    def report(self):
+        print(f"Bread: {resources["bread"]}\n"
+              f"Ham: {resources["ham"]}\n"
+              f"Cheese: {resources["cheese"]}\n")
 
 ### Make an instance of SandwichMachine class and write the rest of the codes ###
 order = SandwichMachine(resources)
-ordering = input("What would you like? (small/medium/large/off/report)")
 while True:
+    ordering = input(
+        "What would you like? (small/medium/large/off/ report): ").lower()
 
-    if ordering.lower() == "small":
-        order.check_resources(recipes["small"]["ingredients"])
-        coins = order.process_coins()
-        order.transaction_result(coins, recipes["small"]["cost"])
-    elif ordering.lower() == "medium":
-        order.check_resources(recipes["medium"]["ingredients"])
-    elif ordering.lower() == "large":
-        order.check_resources(recipes["large"]["ingredients"])
-    elif ordering.lower() == "off":
-        print("Shutting down...")
+    if ordering == "off":
         break
-    elif ordering.lower() == "report":
-        print(f"Bread: {resources["bread"]}\n"
-            f"Ham: {resources["ham"]}\n"
-            f"Cheese: {resources["cheese"]}")
 
-    ordering = input("What would you like? (small/medium/large/off/report)")
+    if ordering == "report":
+        order.report()
+        continue
+
+    if ordering not in recipes:
+        # Ignore unknown input and reprompt
+        continue
+
+    recipe = recipes[ordering]
+    ingredients = recipe["ingredients"]
+    cost = recipe["cost"]
+
+    if not order.check_resources(ingredients):
+        continue
+
+    coins = order.process_coins()
+    if not order.transaction_result(coins, cost):
+        continue
+
+    order.make_sandwich(ordering, ingredients)
